@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Gráfica Incrível</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f0f8ff;
+    }
+
+    canvas {
+      border: 1px solid #000;
+      margin-top: 20px;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .controls input, .controls button {
+      margin: 5px;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .controls label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Calculadora Gráfica</h1>
+  <canvas id="graphCanvas" width="800" height="600"></canvas>
+  <div class="controls">
+    <label for="functionInput">Digite a função (em termos de <code>x</code>):</label>
+    <input type="text" id="functionInput" placeholder="Exemplo: sin(x), x^2, e^x" />
+    <button onclick="plotFunction()">Plotar</button>
+    <button onclick="clearGraph()">Limpar Gráfico</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    let scale = 40; // Pixels por unidade
+
+    // Desenhar o plano cartesiano
+    function drawGrid() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Plano cartesiano
+      ctx.strokeStyle = '#ccc';
+      ctx.lineWidth = 1;
+
+      for (let x = 0; x <= width; x += scale) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+
+      for (let y = 0; y <= height; y += scale) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // Eixos principais
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+
+      // Eixo X
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(width, centerY);
+      ctx.stroke();
+
+      // Eixo Y
+      ctx.beginPath();
+      ctx.moveTo(centerX, 0);
+      ctx.lineTo(centerX, height);
+      ctx.stroke();
+    }
+
+    // Função para converter coordenadas do mundo real para a tela
+    function toCanvasCoords(x, y) {
+      return [centerX + x * scale, centerY - y * scale];
+    }
+
+    // Plotar uma função
+    function plotFunction() {
+      const input = document.getElementById('functionInput').value;
+      if (!input) {
+        alert('Por favor, insira uma função válida!');
+        return;
+      }
+
+      drawGrid();
+
+      ctx.strokeStyle = 'blue';
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+
+      for (let x = -centerX / scale; x <= centerX / scale; x += 0.01) {
+        try {
+          const y = evaluateFunction(input, x);
+
+          if (isNaN(y) || !isFinite(y)) continue;
+
+          const [canvasX, canvasY] = toCanvasCoords(x, y);
+
+          if (x === -centerX / scale) {
+            ctx.moveTo(canvasX, canvasY);
+          } else {
+            ctx.lineTo(canvasX, canvasY);
+          }
+        } catch (error) {
+          console.error('Erro ao avaliar a função:', error);
+          alert('A função inserida contém erros.');
+          return;
+        }
+      }
+
+      ctx.stroke();
+    }
+
+    // Limpar o gráfico
+    function clearGraph() {
+      drawGrid();
+      document.getElementById('functionInput').value = '';
+    }
+
+    // Avaliar a função de entrada
+    function evaluateFunction(func, x) {
+      // Substituir operadores comuns
+      func = func.replace(/\^/g, '**')
+                 .replace(/sin/g, 'Math.sin')
+                 .replace(/cos/g, 'Math.cos')
+                 .replace(/tan/g, 'Math.tan')
+                 .replace(/sqrt/g, 'Math.sqrt')
+                 .replace(/log/g, 'Math.log')
+                 .replace(/e/g, Math.E)
+                 .replace(/pi/g, Math.PI);
+
+      return eval(func);
+    }
+
+    // Inicializar
+    drawGrid();
+  </script>
+</body>
+</html>
